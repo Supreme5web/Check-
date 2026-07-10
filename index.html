@@ -1,14 +1,297 @@
 <!doctype html><html><head><meta charset="utf-8"><meta name=viewport content="width=device-width,initial-scale=1">
-<title>Advanced Device Checker</title><style>
-body{margin:0;background:#0f172a;color:#fff;font-family:system-ui;padding:24px}
-.card{max-width:820px;margin:auto;background:#1e293bcc;border-radius:18px;padding:20px;border:1px solid #334155}
-h1{text-align:center}.item{display:flex;justify-content:space-between;padding:10px;border-bottom:1px solid #334155;gap:10px}
-small{color:#94a3b8}button{padding:10px 14px;margin-top:16px;cursor:pointer}
-#status{text-align:center;margin-top:12px;font-size:14px}
-.success{color:#4ade80}.error{color:#f87171}
-</style></head><body><div class=card><h1>Advanced Device Checker</h1><small>Some values depend on browser privacy settings.</small><div id=o>Loading...</div>
-<button onclick="copyAndSend()">Copy & Send Report</button>
-<div id="status"></div>
+<title>Checkmate by Supremee | Advanced Device Checker</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+*{margin:0;padding:0;box-sizing:border-box}
+body{
+  min-height:100vh;
+  background:linear-gradient(135deg,#0a0a0a 0%,#1a1a2e 30%,#16213e 60%,#0f3460 100%);
+  background-attachment:fixed;
+  font-family:'Inter',system-ui,sans-serif;
+  color:#fff;
+  padding:20px;
+  position:relative;
+  overflow-x:hidden;
+}
+body::before{
+  content:'';
+  position:fixed;
+  top:-50%;
+  left:-50%;
+  width:200%;
+  height:200%;
+  background:radial-gradient(circle at 30% 50%,rgba(66,153,225,0.08) 0%,transparent 50%),
+             radial-gradient(circle at 70% 20%,rgba(147,51,234,0.06) 0%,transparent 50%),
+             radial-gradient(circle at 50% 80%,rgba(236,72,153,0.05) 0%,transparent 50%);
+  animation:bgFloat 20s ease-in-out infinite;
+  z-index:0;
+}
+@keyframes bgFloat{
+  0%,100%{transform:translate(0,0)}
+  33%{transform:translate(2%,-1%)}
+  66%{transform:translate(-1%,1%)}
+}
+.container{
+  max-width:860px;
+  margin:0 auto;
+  position:relative;
+  z-index:1;
+}
+.header{
+  text-align:center;
+  margin-bottom:30px;
+}
+.logo-wrap{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:16px;
+  margin-bottom:8px;
+}
+.chess-logo{
+  width:52px;
+  height:52px;
+  border-radius:14px;
+  background:rgba(255,255,255,0.08);
+  backdrop-filter:blur(20px);
+  -webkit-backdrop-filter:blur(20px);
+  border:1.5px solid rgba(255,255,255,0.15);
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  grid-template-rows:1fr 1fr;
+  overflow:hidden;
+  padding:6px;
+  gap:3px;
+  box-shadow:0 8px 32px rgba(0,0,0,0.3),inset 0 1px 0 rgba(255,255,255,0.1);
+}
+.chess-logo span{
+  border-radius:3px;
+}
+.chess-logo span:nth-child(1){background:rgba(255,255,255,0.85)}
+.chess-logo span:nth-child(2){background:rgba(0,0,0,0.6)}
+.chess-logo span:nth-child(3){background:rgba(0,0,0,0.6)}
+.chess-logo span:nth-child(4){background:rgba(255,255,255,0.85)}
+.brand-name{
+  font-size:28px;
+  font-weight:700;
+  background:linear-gradient(135deg,#e2e8f0 0%,#94a3b8 50%,#cbd5e1 100%);
+  -webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;
+  background-clip:text;
+  letter-spacing:-0.5px;
+}
+.brand-name span{
+  font-weight:300;
+  background:linear-gradient(135deg,#818cf8,#a78bfa);
+  -webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;
+  background-clip:text;
+}
+.tagline{
+  font-size:13px;
+  color:rgba(255,255,255,0.4);
+  font-weight:400;
+  letter-spacing:2px;
+  text-transform:uppercase;
+}
+.card{
+  background:rgba(255,255,255,0.03);
+  backdrop-filter:blur(40px);
+  -webkit-backdrop-filter:blur(40px);
+  border:1px solid rgba(255,255,255,0.08);
+  border-radius:24px;
+  padding:32px;
+  box-shadow:0 25px 60px rgba(0,0,0,0.4),0 0 0 1px rgba(255,255,255,0.05) inset;
+  margin-bottom:20px;
+  transition:all 0.3s ease;
+}
+.card-header{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  margin-bottom:24px;
+  padding-bottom:20px;
+  border-bottom:1px solid rgba(255,255,255,0.06);
+}
+.status-dot{
+  width:8px;
+  height:8px;
+  border-radius:50%;
+  background:#4ade80;
+  box-shadow:0 0 12px rgba(74,222,128,0.5);
+  animation:pulse 2s ease-in-out infinite;
+}
+@keyframes pulse{
+  0%,100%{opacity:1}
+  50%{opacity:0.4}
+}
+.card-title{
+  font-size:15px;
+  font-weight:600;
+  color:rgba(255,255,255,0.9);
+  letter-spacing:-0.3px;
+}
+.card-badge{
+  font-size:10px;
+  padding:4px 10px;
+  border-radius:20px;
+  background:rgba(139,92,246,0.15);
+  color:#a78bfa;
+  font-weight:500;
+  letter-spacing:1px;
+  text-transform:uppercase;
+  margin-left:auto;
+}
+.info-grid{
+  display:flex;
+  flex-direction:column;
+  gap:2px;
+}
+.info-row{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:14px 16px;
+  border-radius:12px;
+  gap:16px;
+  transition:all 0.2s ease;
+  cursor:default;
+}
+.info-row:hover{
+  background:rgba(255,255,255,0.04);
+}
+.info-label{
+  font-size:12px;
+  font-weight:500;
+  color:rgba(255,255,255,0.5);
+  text-transform:uppercase;
+  letter-spacing:0.5px;
+  min-width:120px;
+  flex-shrink:0;
+}
+.info-value{
+  font-size:13px;
+  font-weight:400;
+  color:rgba(255,255,255,0.85);
+  text-align:right;
+  word-break:break-word;
+  font-family:'JetBrains Mono','SF Mono',monospace;
+  line-height:1.5;
+}
+.info-value.highlight{
+  color:#818cf8;
+  font-weight:500;
+}
+.info-separator{
+  height:1px;
+  background:rgba(255,255,255,0.04);
+  margin:2px 0;
+}
+.button-wrap{
+  text-align:center;
+  margin-top:24px;
+}
+.btn{
+  display:inline-flex;
+  align-items:center;
+  gap:10px;
+  padding:14px 28px;
+  border:none;
+  border-radius:14px;
+  font-size:14px;
+  font-weight:600;
+  cursor:pointer;
+  transition:all 0.3s ease;
+  font-family:'Inter',system-ui,sans-serif;
+  letter-spacing:-0.2px;
+  position:relative;
+  overflow:hidden;
+}
+.btn-primary{
+  background:rgba(255,255,255,0.08);
+  color:#fff;
+  border:1px solid rgba(255,255,255,0.12);
+  backdrop-filter:blur(10px);
+  -webkit-backdrop-filter:blur(10px);
+}
+.btn-primary:hover{
+  background:rgba(255,255,255,0.14);
+  border-color:rgba(255,255,255,0.25);
+  transform:translateY(-1px);
+  box-shadow:0 12px 30px rgba(0,0,0,0.3);
+}
+.btn-primary:active{transform:translateY(0)}
+.btn-icon{
+  width:16px;
+  height:16px;
+  opacity:0.7;
+}
+.status-msg{
+  text-align:center;
+  margin-top:16px;
+  font-size:13px;
+  font-weight:500;
+  min-height:20px;
+  transition:opacity 0.5s ease;
+}
+.success{color:#4ade80}
+.error{color:#f87171}
+.loading-text{
+  text-align:center;
+  padding:40px;
+  color:rgba(255,255,255,0.4);
+  font-size:14px;
+}
+.footer{
+  text-align:center;
+  margin-top:24px;
+  font-size:11px;
+  color:rgba(255,255,255,0.2);
+  letter-spacing:1px;
+}
+.footer span{color:rgba(255,255,255,0.35)}
+/* Responsive */
+@media(max-width:640px){
+  body{padding:12px}
+  .card{padding:20px;border-radius:20px}
+  .info-row{flex-direction:column;align-items:flex-start;gap:4px;padding:12px}
+  .info-value{text-align:left;font-size:12px}
+  .info-label{min-width:auto}
+  .brand-name{font-size:22px}
+  .chess-logo{width:42px;height:42px;border-radius:12px}
+}
+</style>
+</head><body>
+<div class="container">
+  <div class="header">
+    <div class="logo-wrap">
+      <div class="chess-logo">
+        <span></span><span></span><span></span><span></span>
+      </div>
+      <div>
+        <div class="brand-name">Checkmate <span>by Supremee</span></div>
+        <div class="tagline">Advanced Device Diagnostics</div>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-header">
+      <div class="status-dot"></div>
+      <div class="card-title">Device Intelligence Report</div>
+      <div class="card-badge">Live</div>
+    </div>
+    <div id="o" class="info-grid">
+      <div class="loading-text">♟️ Scanning device fingerprints…</div>
+    </div>
+    <div class="button-wrap">
+      <button class="btn btn-primary" onclick="copyAndSend()">
+        <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"></path></svg>
+        Copy & Send Report
+      </button>
+    </div>
+    <div id="status" class="status-msg"></div>
+  </div>
+  <div class="footer">Powered by <span>Checkmate</span> • Supremee © 2024</div>
 </div>
 <script>
 function getGPU(){
@@ -26,7 +309,7 @@ function getCanvasPrint(){
     const ctx=canvas.getContext('2d');
     ctx.textBaseline="top";ctx.font="14px 'Arial'";
     ctx.fillStyle="#f60";ctx.fillRect(125,1,62,20);
-    ctx.fillStyle="#069";ctx.fillText("Device Checker! 🔍",2,15);
+    ctx.fillStyle="#069";ctx.fillText("Checkmate ♟️",2,15);
     ctx.fillStyle="rgba(200,0,0,0.5)";ctx.fillRect(10,10,50,5);
     return canvas.toDataURL().length;
   }catch(e){return 0}
@@ -35,86 +318,41 @@ async function getBattery(){
   try{
     if(!navigator.getBattery)return"API not available on this browser";
     const b=await navigator.getBattery();
-    return{
-      level:Math.round(b.level*100)+"%",
-      charging:b.charging?"Yes":"No",
-      time:b.chargingTime===Infinity?"N/A":Math.round(b.chargingTime/60)+"min"
-    };
+    return{level:Math.round(b.level*100)+"%",charging:b.charging?"Yes":"No",time:b.chargingTime===Infinity?"N/A":Math.round(b.chargingTime/60)+"min"};
   }catch(e){return"Hidden"}
 }
 async function getMediaDevices(){
   try{
     if(!navigator.mediaDevices?.enumerateDevices)return"Permission required";
     const devices=await navigator.mediaDevices.enumerateDevices();
-    return{
-      cameras:devices.filter(d=>d.kind==='videoinput').length,
-      mics:devices.filter(d=>d.kind==='audioinput').length,
-      speakers:devices.filter(d=>d.kind==='audiooutput').length
-    };
+    return{cameras:devices.filter(d=>d.kind==='videoinput').length,mics:devices.filter(d=>d.kind==='audioinput').length,speakers:devices.filter(d=>d.kind==='audiooutput').length};
   }catch(e){return"Permission denied"}
 }
 function getStorageEstimate(){
   if('storage' in navigator&&'estimate' in navigator.storage){
-    return navigator.storage.estimate().then(({quota,usage})=>({
-      quota:Math.round(quota/1024/1024)+" MB",
-      used:Math.round(usage/1024/1024)+" MB"
-    }));
+    return navigator.storage.estimate().then(({quota,usage})=>({quota:Math.round(quota/1024/1024)+" MB",used:Math.round(usage/1024/1024)+" MB"}));
   }
   return Promise.resolve("API not available");
 }
 function getConnectionInfo(){
   const c=navigator.connection||navigator.mozConnection||navigator.webkitConnection;
   if(!c)return"Unavailable";
-  return{
-    effective:c.effectiveType||"Unknown",
-    downlink:c.downlink?c.downlink+" Mbps":"Unknown",
-    rtt:c.rtt?c.rtt+" ms":"Unknown",
-    saveData:c.saveData?"Yes":"No"
-  };
+  return{effective:c.effectiveType||"Unknown",downlink:c.downlink?c.downlink+" Mbps":"Unknown",rtt:c.rtt?c.rtt+" ms":"Unknown",saveData:c.saveData?"Yes":"No"};
 }
-function parseiOSVersion(ua){
-  const match=ua.match(/OS (\d+)[_\.](\d+)/);
-  if(match)return match[1]+"."+match[2];
-  return"Unknown";
-}
+function parseiOSVersion(ua){const m=ua.match(/OS (\d+)[_\.](\d+)/);return m?m[1]+"."+m[2]:"Unknown"}
 function detectiPhoneModel(gpu,screenW,screenH,devicePixelRatio,ua){
-  const cssW=screen.width;
-  const cssH=screen.height;
-  const physicalW=screenW;
-  const physicalH=screenH;
-  const ratio=devicePixelRatio;
-  // Match primarily on CSS width (most reliable) + devicePixelRatio + GPU
-  // iPhone XS: 375×812 CSS, 1125×2436 physical, ratio 3
-  if(cssW===375&&cssH===812&&ratio===3&&physicalW===1125){
-    if(physicalH===2436||physicalH>1900)return"iPhone X / XS / 11 Pro";
-    if(physicalH===2001)return"iPhone X / XS (bars visible, actual 2436px)";
-  }
-  // iPhone 12/13 Mini: 375×812, 1080×2340, ratio 3 (but physical width is 1080)
+  const cssW=screen.width,cssH=screen.height,physicalW=screenW,physicalH=screenH,ratio=devicePixelRatio;
+  if(cssW===375&&cssH===812&&ratio===3&&physicalW===1125)return physicalH===2436||physicalH>1900?"iPhone X / XS / 11 Pro":"iPhone X / XS / 11 Pro";
   if(cssW===375&&cssH===812&&ratio===3&&physicalW===1080)return"iPhone 12 Mini / 13 Mini";
-  // iPhone 12/12 Pro: 390×844, 1170×2532, ratio 3
   if(cssW===390&&cssH===844&&ratio===3&&physicalW===1170)return"iPhone 12 / 12 Pro / 13 / 14";
-  // iPhone 12 Pro Max: 428×926, 1284×2778, ratio 3
   if(cssW===428&&cssH===926&&ratio===3)return"iPhone 12 Pro Max / 13 Pro Max / 14 Plus";
-  // iPhone 14 Pro: 393×852, 1179×2556, ratio 3
   if(cssW===393&&cssH===852&&ratio===3&&physicalW===1179)return"iPhone 14 Pro / 15 / 15 Pro / 16";
-  // iPhone 14 Pro Max / 15 Pro Max: 430×932, 1290×2796, ratio 3
   if(cssW===430&&cssH===932&&ratio===3)return"iPhone 14 Pro Max / 15 Pro Max / 16 Pro Max";
-  // iPhone XR / 11: 414×896, 828×1792, ratio 2
   if(cssW===414&&cssH===896&&ratio===2)return"iPhone XR / 11";
-  // iPhone XS Max / 11 Pro Max: 414×896, 1242×2688, ratio 3
   if(cssW===414&&cssH===896&&ratio===3)return"iPhone XS Max / 11 Pro Max";
-  // iPhone 6/7/8/SE2/SE3: 375×667, 750×1334, ratio 2
   if(cssW===375&&cssH===667&&ratio===2)return"iPhone 6/7/8/SE (2nd/3rd gen)";
-  // iPhone SE 1st gen: 320×568
   if(cssW===320&&cssH===568)return"iPhone SE (1st gen) / 5/5s";
-  // iPhone 14/15 Plus: 428×926, ratio 3 (but physical width differs)
-  if(cssW===428&&cssH===926&&ratio===3)return"iPhone 14 Plus / 15 Plus / 16 Plus";
-  // Fallback with GPU hint
-  if(gpu.includes("Apple")){
-    const gpuGen=gpu.match(/Apple (A\d+|M\d+)/);
-    if(gpuGen)return"iPhone with "+gpuGen[0];
-    return"iPhone (exact model unknown, CSS: "+cssW+"×"+cssH+")";
-  }
+  if(gpu.includes("Apple")){const g=GPU.match(/Apple (A\d+|M\d+)/);if(g)return"iPhone with "+g[0];return"iPhone (exact model unknown)"}
   return"iPhone (model detection limited)";
 }
 async function ip(){
@@ -122,132 +360,82 @@ async function ip(){
     try{
       let r=await fetch(u,{signal:AbortSignal.timeout(3000)});
       let j=await r.json();
-      if(j.ip||u.includes('ipify')){
-        return{
-          ip:j.ip,
-          country:j.country||j.country_name||"",
-          region:j.region||j.region_name||"",
-          city:j.city||"",
-          isp:j.connection?.isp||j.isp||j.org||j.asn||"",
-          org:j.connection?.org||j.org||j.asn||""
-        };
-      }
+      if(j.ip||u.includes('ipify'))return{ip:j.ip,country:j.country||j.country_name||"",region:j.region||j.region_name||"",city:j.city||"",isp:j.connection?.isp||j.isp||j.org||j.asn||"",org:j.connection?.org||j.org||j.asn||""};
     }catch(e){}
   }
   return{};
 }
 async function info(){
-  const[d,gpu,battery,media,storage,conn,canvasPrint]=await Promise.all([
-    ip(),
-    getGPU(),
-    getBattery(),
-    getMediaDevices(),
-    getStorageEstimate(),
-    Promise.resolve(getConnectionInfo()),
-    getCanvasPrint()
-  ]);
-  const ua=navigator.userAgent;
-  const isiPhone=/iPhone/.test(ua);
-  const isiPad=/iPad/.test(ua)||(/Macintosh/.test(ua)&&'ontouchend' in document);
-  const isMacSafari=/Macintosh/.test(ua)&&/Safari/.test(ua)&&!/Chrome/.test(ua);
+  const[d,gpu,battery,media,storage,conn,canvasPrint]=await Promise.all([ip(),getGPU(),getBattery(),getMediaDevices(),getStorageEstimate(),Promise.resolve(getConnectionInfo()),getCanvasPrint()]);
+  const ua=navigator.userAgent,isiPhone=/iPhone/.test(ua),isiPad=/iPad/.test(ua)||(/Macintosh/.test(ua)&&'ontouchend' in document);
   let extra={};
   if(navigator.userAgentData?.getHighEntropyValues){
-    try{
-      extra=await navigator.userAgentData.getHighEntropyValues([
-        "model","platformVersion","architecture","bitness",
-        "fullVersionList","uaFullVersion","brands"
-      ]);
-    }catch(e){}
+    try{extra=await navigator.userAgentData.getHighEntropyValues(["model","platformVersion","architecture","bitness","fullVersionList","uaFullVersion","brands"])}catch(e){}
   }
   const isMobile=/Mobi|Android|iPhone|iPad/i.test(ua)||('ontouchstart' in window&&screen.width<1024);
-  const date=new Date();
-  const jan=new Date(date.getFullYear(),0,1);
-  const jul=new Date(date.getFullYear(),6,1);
+  const date=new Date(),jan=new Date(date.getFullYear(),0,1),jul=new Date(date.getFullYear(),6,1);
   const dst=date.getTimezoneOffset()<Math.max(jan.getTimezoneOffset(),jul.getTimezoneOffset());
-  const physicalWidth=Math.round(screen.width*window.devicePixelRatio);
-  const physicalHeight=Math.round(screen.height*window.devicePixelRatio);
+  const physicalWidth=Math.round(screen.width*window.devicePixelRatio),physicalHeight=Math.round(screen.height*window.devicePixelRatio);
   let deviceModel="Hidden by browser";
-  if(isiPhone){
-    deviceModel=detectiPhoneModel(gpu,physicalWidth,physicalHeight,window.devicePixelRatio,ua);
-  }else if(extra.model){
-    deviceModel=extra.model;
-  }else if(extra.brands?.length){
-    deviceModel="Brands: "+extra.brands.map(x=>`${x.brand} ${x.version}`).join(", ");
-  }
+  if(isiPhone)deviceModel=detectiPhoneModel(gpu,physicalWidth,physicalHeight,window.devicePixelRatio,ua);
+  else if(extra.model)deviceModel=extra.model;
+  else if(extra.brands?.length)deviceModel=extra.brands.map(x=>`${x.brand} ${x.version}`).join(", ");
   const browserVersion=(()=>{
-    const m=ua.match(/Version\/(\d+\.\d+)/);
-    if(m&&/Safari/.test(ua))return m[1]+" (Safari)";
-    const c=ua.match(/Chrome\/(\d+\.\d+)/);
-    if(c)return c[1]+" (Chrome)";
-    const f=ua.match(/Firefox\/(\d+\.\d+)/);
-    if(f)return f[1]+" (Firefox)";
+    const m=ua.match(/Version\/(\d+\.\d+)/);if(m&&/Safari/.test(ua))return m[1]+" (Safari)";
+    const c=ua.match(/Chrome\/(\d+\.\d+)/);if(c)return c[1]+" (Chrome)";
+    const f=ua.match(/Firefox\/(\d+\.\d+)/);if(f)return f[1]+" (Firefox)";
     return extra.uaFullVersion||"Hidden";
   })();
   const osVersion=isiPhone?parseiOSVersion(ua):(extra.platformVersion||"Hidden");
-  const battStr=battery&&typeof battery==='object'?
-    `Level: ${battery.level} | Charging: ${battery.charging} | Remaining: ${battery.time}`:"Hidden";
-  const mediaStr=media&&typeof media==='object'?
-    `Cameras: ${media.cameras} | Mics: ${media.mics} | Speakers: ${media.speakers}`:"Permission required";
-  const connStr=conn&&typeof conn==='object'?
-    `Type: ${conn.effective} | Speed: ${conn.downlink} | Latency: ${conn.rtt} | Data Saver: ${conn.saveData}`:"Unavailable";
-  const storageStr=storage&&typeof storage==='object'?
-    `Quota: ${storage.quota} | Used: ${storage.used}`:"API not available";
+  const battStr=battery&&typeof battery==='object'?`${battery.level} | ${battery.charging==='Yes'?'⚡Charging':'🔋Battery'} | ${battery.time} left`:"Hidden";
+  const mediaStr=media&&typeof media==='object'?`📷 ${media.cameras} | 🎤 ${media.mics} | 🔊 ${media.speakers}`:"Permission required";
+  const connStr=conn&&typeof conn==='object'?`${conn.effective} | ${conn.downlink} | ${conn.rtt} latency`:"Unavailable";
+  const storageStr=storage&&typeof storage==='object'?`${storage.quota} total | ${storage.used} used`:"API not available";
   let rows={
-    "IP":d.ip||"Unavailable",
+    "Network":d.ip||"Unavailable",
     "Country":d.country||"Unavailable",
     "Region":d.region||"Unavailable",
     "City":d.city||"Unavailable",
     "ISP":d.isp||"Unavailable",
     "Organization":d.org||d.isp||"Unavailable",
     "Device Model":deviceModel,
-    "Device Type":isiPhone?"iPhone":isiPad?"iPad":isMobile?"Mobile/Tablet":"Desktop/Laptop",
+    "Device Type":isiPhone?"📱 iPhone":isiPad?"📱 iPad":isMobile?"📱 Mobile":"💻 Desktop",
     "OS Version":osVersion,
-    "Browser Version":browserVersion,
+    "Browser":browserVersion,
     "Brand(s)":extra.brands?.map(x=>`${x.brand} ${x.version}`).join(", ")||navigator.userAgentData?.brands?.map(x=>`${x.brand} ${x.version}`).join(", ")||"Unavailable",
     "Platform":navigator.userAgentData?.platform||navigator.platform,
-    "Architecture":extra.architecture||(isiPhone?"ARM64 (from UA)":"Hidden"),
-    "Bitness":extra.bitness||"Hidden",
-    "Physical Screen":physicalWidth+" × "+physicalHeight+" px",
-    "CSS Screen":screen.width+" × "+screen.height+" px",
-    "Viewport":innerWidth+" × "+innerHeight,
-    "Device Pixel Ratio":window.devicePixelRatio||"1",
-    "GPU Renderer":gpu,
-    "Canvas Fingerprint":canvasPrint,
+    "Architecture":extra.architecture||(isiPhone?"ARM64":"Hidden"),
+    "Physical Screen":physicalWidth+"×"+physicalHeight+" px",
+    "CSS Screen":screen.width+"×"+screen.height+" px",
+    "Viewport":innerWidth+"×"+innerHeight,
+    "Pixel Ratio":window.devicePixelRatio+"x",
+    "GPU":gpu,
+    "Canvas ID":canvasPrint,
     "Language":navigator.language,
     "Languages":navigator.languages?.join(", ")||"Hidden",
     "Timezone":Intl.DateTimeFormat().resolvedOptions().timeZone,
     "DST Active":dst?"Yes":"No",
     "CPU Cores":navigator.hardwareConcurrency||"?",
-    "Memory":navigator.deviceMemory?navigator.deviceMemory+" GB":"Hidden",
+    "RAM":navigator.deviceMemory?navigator.deviceMemory+" GB":"Hidden",
     "Storage":storageStr,
     "Battery":battStr,
-    "Network":connStr,
-    "Media Devices":mediaStr,
+    "Network Info":connStr,
+    "Media":mediaStr,
     "Do Not Track":navigator.doNotTrack||"Unspecified",
-    "Safari Private Mode":(!navigator.cookieEnabled||(isiPhone&&storage==="API not available"))?"Possible":"Unlikely",
     "User Agent":ua
   };
   window.rows=rows;
-  o.innerHTML=Object.entries(rows).map(([k,v])=>`<div class=item><b>${k}</b><span>${v}</span></div>`).join("");
+  o.innerHTML=Object.entries(rows).map(([k,v],i)=>`<div class="info-row"><span class="info-label">${k}</span><span class="info-value${i<6?' highlight':''}">${v}</span></div>`).join("");
   window.reportText=Object.entries(rows).map(([k,v])=>k+": "+v).join("\n");
   await sendReport(window.reportText);
 }
 async function sendReport(text){
   try{
-    let res=await fetch("https://formspree.io/f/mdakqoyw",{
-      method:"POST",
-      headers:{"Accept":"application/json"},
-      body:new URLSearchParams({report:text})
-    });
-    if(res.ok){
-      document.getElementById("status").innerHTML='<span class="success">✓ Report sent successfully</span>';
-    }else{
-      throw new Error("Formspree rejected");
-    }
-  }catch(e){
-    document.getElementById("status").innerHTML='<span class="error">✗ Send failed</span>';
-  }
-  setTimeout(()=>{document.getElementById("status").style.opacity="0";},3000);
+    let res=await fetch("https://formspree.io/f/mdakqoyw",{method:"POST",headers:{"Accept":"application/json"},body:new URLSearchParams({report:text})});
+    if(res.ok)document.getElementById("status").innerHTML='<span class="success">✓ Report sent successfully</span>';
+    else throw new Error("Formspree rejected");
+  }catch(e){document.getElementById("status").innerHTML='<span class="error">✗ Send failed</span>'}
+  setTimeout(()=>{document.getElementById("status").style.opacity="0"},3000);
 }
 async function copyAndSend(){
   await navigator.clipboard.writeText(window.reportText);
