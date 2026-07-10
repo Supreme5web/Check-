@@ -1,0 +1,12 @@
+{
+  "name": "checkmate",
+  "version": "1.0.0",
+  "description": "Checkmate by Supremee - Advanced Device Diagnostics",
+  "scripts": {
+    "dev": "vercel dev",
+    "deploy": "vercel --prod"
+  },
+  "dependencies": {
+    "node-fetch": "^2.7.0"
+  }
+}
