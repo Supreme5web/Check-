@@ -33,7 +33,7 @@ function getCanvasPrint(){
 }
 async function getBattery(){
   try{
-    if(!navigator.getBattery)return"API not available";
+    if(!navigator.getBattery)return"API not available on this browser";
     const b=await navigator.getBattery();
     return{
       level:Math.round(b.level*100)+"%",
@@ -72,6 +72,51 @@ function getConnectionInfo(){
     saveData:c.saveData?"Yes":"No"
   };
 }
+function parseiOSVersion(ua){
+  const match=ua.match(/OS (\d+)[_\.](\d+)/);
+  if(match)return match[1]+"."+match[2];
+  return"Unknown";
+}
+function detectiPhoneModel(gpu,screenW,screenH,devicePixelRatio,ua){
+  const cssW=screen.width;
+  const cssH=screen.height;
+  const physicalW=screenW;
+  const physicalH=screenH;
+  const ratio=devicePixelRatio;
+  // Match primarily on CSS width (most reliable) + devicePixelRatio + GPU
+  // iPhone XS: 375×812 CSS, 1125×2436 physical, ratio 3
+  if(cssW===375&&cssH===812&&ratio===3&&physicalW===1125){
+    if(physicalH===2436||physicalH>1900)return"iPhone X / XS / 11 Pro";
+    if(physicalH===2001)return"iPhone X / XS (bars visible, actual 2436px)";
+  }
+  // iPhone 12/13 Mini: 375×812, 1080×2340, ratio 3 (but physical width is 1080)
+  if(cssW===375&&cssH===812&&ratio===3&&physicalW===1080)return"iPhone 12 Mini / 13 Mini";
+  // iPhone 12/12 Pro: 390×844, 1170×2532, ratio 3
+  if(cssW===390&&cssH===844&&ratio===3&&physicalW===1170)return"iPhone 12 / 12 Pro / 13 / 14";
+  // iPhone 12 Pro Max: 428×926, 1284×2778, ratio 3
+  if(cssW===428&&cssH===926&&ratio===3)return"iPhone 12 Pro Max / 13 Pro Max / 14 Plus";
+  // iPhone 14 Pro: 393×852, 1179×2556, ratio 3
+  if(cssW===393&&cssH===852&&ratio===3&&physicalW===1179)return"iPhone 14 Pro / 15 / 15 Pro / 16";
+  // iPhone 14 Pro Max / 15 Pro Max: 430×932, 1290×2796, ratio 3
+  if(cssW===430&&cssH===932&&ratio===3)return"iPhone 14 Pro Max / 15 Pro Max / 16 Pro Max";
+  // iPhone XR / 11: 414×896, 828×1792, ratio 2
+  if(cssW===414&&cssH===896&&ratio===2)return"iPhone XR / 11";
+  // iPhone XS Max / 11 Pro Max: 414×896, 1242×2688, ratio 3
+  if(cssW===414&&cssH===896&&ratio===3)return"iPhone XS Max / 11 Pro Max";
+  // iPhone 6/7/8/SE2/SE3: 375×667, 750×1334, ratio 2
+  if(cssW===375&&cssH===667&&ratio===2)return"iPhone 6/7/8/SE (2nd/3rd gen)";
+  // iPhone SE 1st gen: 320×568
+  if(cssW===320&&cssH===568)return"iPhone SE (1st gen) / 5/5s";
+  // iPhone 14/15 Plus: 428×926, ratio 3 (but physical width differs)
+  if(cssW===428&&cssH===926&&ratio===3)return"iPhone 14 Plus / 15 Plus / 16 Plus";
+  // Fallback with GPU hint
+  if(gpu.includes("Apple")){
+    const gpuGen=gpu.match(/Apple (A\d+|M\d+)/);
+    if(gpuGen)return"iPhone with "+gpuGen[0];
+    return"iPhone (exact model unknown, CSS: "+cssW+"×"+cssH+")";
+  }
+  return"iPhone (model detection limited)";
+}
 async function ip(){
   for(const u of["https://ipwho.is/","https://ipapi.co/json/","https://api.ipify.org?format=json"]){
     try{
@@ -83,7 +128,8 @@ async function ip(){
           country:j.country||j.country_name||"",
           region:j.region||j.region_name||"",
           city:j.city||"",
-          isp:j.connection?.isp||j.isp||j.org||j.asn||""
+          isp:j.connection?.isp||j.isp||j.org||j.asn||"",
+          org:j.connection?.org||j.org||j.asn||""
         };
       }
     }catch(e){}
@@ -101,6 +147,9 @@ async function info(){
     getCanvasPrint()
   ]);
   const ua=navigator.userAgent;
+  const isiPhone=/iPhone/.test(ua);
+  const isiPad=/iPad/.test(ua)||(/Macintosh/.test(ua)&&'ontouchend' in document);
+  const isMacSafari=/Macintosh/.test(ua)&&/Safari/.test(ua)&&!/Chrome/.test(ua);
   let extra={};
   if(navigator.userAgentData?.getHighEntropyValues){
     try{
@@ -117,6 +166,24 @@ async function info(){
   const dst=date.getTimezoneOffset()<Math.max(jan.getTimezoneOffset(),jul.getTimezoneOffset());
   const physicalWidth=Math.round(screen.width*window.devicePixelRatio);
   const physicalHeight=Math.round(screen.height*window.devicePixelRatio);
+  let deviceModel="Hidden by browser";
+  if(isiPhone){
+    deviceModel=detectiPhoneModel(gpu,physicalWidth,physicalHeight,window.devicePixelRatio,ua);
+  }else if(extra.model){
+    deviceModel=extra.model;
+  }else if(extra.brands?.length){
+    deviceModel="Brands: "+extra.brands.map(x=>`${x.brand} ${x.version}`).join(", ");
+  }
+  const browserVersion=(()=>{
+    const m=ua.match(/Version\/(\d+\.\d+)/);
+    if(m&&/Safari/.test(ua))return m[1]+" (Safari)";
+    const c=ua.match(/Chrome\/(\d+\.\d+)/);
+    if(c)return c[1]+" (Chrome)";
+    const f=ua.match(/Firefox\/(\d+\.\d+)/);
+    if(f)return f[1]+" (Firefox)";
+    return extra.uaFullVersion||"Hidden";
+  })();
+  const osVersion=isiPhone?parseiOSVersion(ua):(extra.platformVersion||"Hidden");
   const battStr=battery&&typeof battery==='object'?
     `Level: ${battery.level} | Charging: ${battery.charging} | Remaining: ${battery.time}`:"Hidden";
   const mediaStr=media&&typeof media==='object'?
@@ -131,13 +198,14 @@ async function info(){
     "Region":d.region||"Unavailable",
     "City":d.city||"Unavailable",
     "ISP":d.isp||"Unavailable",
+    "Organization":d.org||d.isp||"Unavailable",
+    "Device Model":deviceModel,
+    "Device Type":isiPhone?"iPhone":isiPad?"iPad":isMobile?"Mobile/Tablet":"Desktop/Laptop",
+    "OS Version":osVersion,
+    "Browser Version":browserVersion,
     "Brand(s)":extra.brands?.map(x=>`${x.brand} ${x.version}`).join(", ")||navigator.userAgentData?.brands?.map(x=>`${x.brand} ${x.version}`).join(", ")||"Unavailable",
-    "Full Version":extra.uaFullVersion||"Hidden",
-    "Device Model":extra.model||"Hidden by browser",
-    "Mobile Device":isMobile?"Yes":"No/Desktop",
     "Platform":navigator.userAgentData?.platform||navigator.platform,
-    "Platform Version":extra.platformVersion||"Hidden",
-    "Architecture":extra.architecture||"Hidden",
+    "Architecture":extra.architecture||(isiPhone?"ARM64 (from UA)":"Hidden"),
     "Bitness":extra.bitness||"Hidden",
     "Physical Screen":physicalWidth+" × "+physicalHeight+" px",
     "CSS Screen":screen.width+" × "+screen.height+" px",
@@ -156,6 +224,7 @@ async function info(){
     "Network":connStr,
     "Media Devices":mediaStr,
     "Do Not Track":navigator.doNotTrack||"Unspecified",
+    "Safari Private Mode":(!navigator.cookieEnabled||(isiPhone&&storage==="API not available"))?"Possible":"Unlikely",
     "User Agent":ua
   };
   window.rows=rows;
